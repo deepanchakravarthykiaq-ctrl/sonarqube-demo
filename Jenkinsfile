@@ -1,39 +1,35 @@
 pipeline {
-agent any
+    agent any
 
-stages {
-    stage('Checkout') {
-        steps {
-            git branch: 'main',
-                url: 'https://github.com/deepanchakravarthykiaq-ctrl/sonarqube-demo.git'
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    credentialsId: 'github-pat',
+                    url: 'https://github.com/deepanchakravarthykiaq-ctrl/sonarqube-demo.git'
+            }
         }
-    }
 
-    stage('SonarQube Scan') {
-        steps {
-            script {
-                def scannerHome = tool 'sonarScanner'
-
+        stage('SonarQube Scan') {
+            steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=devops-sonarqube-demo \
-                        -Dsonar.projectName=devops-sonarqube-demo \
-                        -Dsonar.sources=.
-                    """
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=devops-sonarqube-demo \
+                          -Dsonar.projectName=devops-sonarqube-demo \
+                          -Dsonar.sources=.
+                    '''
                 }
             }
         }
     }
-}
 
-post {
-    success {
-        echo 'SonarQube analysis completed successfully!'
+    post {
+        success {
+            echo 'Build and SonarQube scan completed successfully!'
+        }
+        failure {
+            echo 'Build failed. Check the Jenkins Console Output.'
+        }
     }
-    failure {
-        echo 'Build failed. Check the Jenkins Console Output.'
-    }
-}
-
 }
