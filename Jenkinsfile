@@ -8,15 +8,6 @@ pipeline {
             }
         }
 
-        stage('Verify Configuration') {
-            steps {
-                sh '''
-                    test -f sonar-project.properties
-                    echo "SonarQube project configuration found"
-                '''
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -28,14 +19,30 @@ pipeline {
                 }
             }
         }
+
+        // ADD QUALITY GATE STAGE HERE
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate()
+                        echo "Quality Gate: ${qg.status}"
+
+                        if (qg.status != 'OK') {
+                            error "Quality Gate failed: ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'SonarQube analysis submitted successfully.'
+            echo 'Pipeline completed successfully.'
         }
         failure {
-            echo 'Pipeline failed. Review the Jenkins console output.'
+            echo 'Pipeline failed. Check Console Output.'
         }
     }
 }
