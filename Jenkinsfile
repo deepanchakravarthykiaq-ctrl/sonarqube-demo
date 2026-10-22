@@ -4,21 +4,27 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    credentialsId: 'github-pat',
-                    url: 'https://github.com/deepanchakravarthykiaq-ctrl/sonarqube-demo.git'
+                checkout scm
             }
         }
 
-        stage('SonarQube Scan') {
+        stage('Verify Configuration') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        sonar-scanner \
-                          -Dsonar.projectKey=devops-sonarqube-demo \
-                          -Dsonar.projectName=devops-sonarqube-demo \
-                          -Dsonar.sources=.
-                    '''
+                sh '''
+                    test -f sonar-project.properties
+                    echo "SonarQube project configuration found"
+                '''
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
                 }
             }
         }
@@ -26,10 +32,10 @@ pipeline {
 
     post {
         success {
-            echo 'Build and SonarQube scan completed successfully!'
+            echo 'SonarQube analysis submitted successfully.'
         }
         failure {
-            echo 'Build failed. Check the Jenkins Console Output.'
+            echo 'Pipeline failed. Review the Jenkins console output.'
         }
     }
 }
