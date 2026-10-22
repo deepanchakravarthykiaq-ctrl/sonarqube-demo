@@ -1,37 +1,39 @@
 pipeline {
-    agent any
+agent any
 
-    tools {
-        sonarRunner 'sonarScanner'
+stages {
+    stage('Checkout') {
+        steps {
+            git branch: 'main',
+                url: 'https://github.com/deepanchakravarthy1qg-ctrl/sonarqube-demo.git'
+        }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+    stage('SonarQube Scan') {
+        steps {
+            script {
+                def scannerHome = tool 'sonarScanner'
 
-        stage('SonarQube Analysis') {
-            steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        sonar-scanner \
-                          -Dsonar.projectKey=devops-sonarqube-demo \
-                          -Dsonar.projectName="DevOps SonarQube Demo" \
-                          -Dsonar.sources=src \
-                          -Dsonar.scm.disabled=true
-                    '''
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=devops-sonarqube-demo \
+                        -Dsonar.projectName=devops-sonarqube-demo \
+                        -Dsonar.sources=.
+                    """
                 }
             }
         }
     }
+}
+
+post {
+    success {
+        echo 'SonarQube analysis completed successfully!'
+    }
+    failure {
+        echo 'Build failed. Check the Jenkins Console Output.'
+    }
+}
+
 }
