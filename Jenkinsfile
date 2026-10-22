@@ -5,7 +5,7 @@ stages {
     stage('Checkout') {
         steps {
             git branch: 'main',
-                url: 'https://github.com/deepanchakravarthy1qg-ctrl/sonarqube-demo.git'
+                url: 'https://github.com/deepanchakravarthykiaq-ctrl/sonarqube-demo.git'
         }
     }
 
